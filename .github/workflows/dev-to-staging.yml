@@ -4,6 +4,9 @@ on:
   pull_request:
     branches:
       - Dev # Trigger only when pull request is merged into the Dev branch.
+  push:
+    branches:
+      - Dev # Trigger on direct push to Dev as well.
   workflow_dispatch:
 
 jobs:
@@ -12,23 +15,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Dev branch
-      uses: actions/checkout@v4
-      with:
-        ref: dev  # Explicitly checkout the Dev branch
-
-    - name: Set up git
-      run: |
-        git config user.email "89786258+00krp@users.noreply.github.com"
-        git config user.name "00krp"
-
     - name: Checkout Staging branch
       uses: actions/checkout@v4
       with:
-        ref: staging  # Now checkout the Staging branch
+        ref: staging  # Explicitly checkout the staging branch
+
+    - name: Fetch the Dev branch
+      run: git fetch origin dev  # Fetch the Dev branch
 
     - name: Merge Dev into Staging
-      run: git merge dev --allow-unrelated-histories -m "Merge from Dev to Staging"
+      run: git merge origin/dev --allow-unrelated-histories -m "Merge from Dev to Staging"
 
     - name: Push code to Staging
       run: git push
