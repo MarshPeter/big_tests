@@ -1,0 +1,52 @@
+name: Development Workflow #ensure code is working before previewing deployment
+
+on: 
+  pull_request:
+    branches:
+      - Dev # Trigger only when pull request is merged into the dev branch.
+  workflow_dispatch:
+
+jobs:
+  test: 
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Node.js (latest version)
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'  # Using stable version of node
+    
+    - name: npm install, test and build
+      run: |
+        npm install 
+        npm test
+        npm run build
+
+  deploy-to-staging:
+    environment: Staging
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+    - name: Checkout dev branch
+      uses: actions/checkout@v4
+      with:
+        ref: dev  # Explicitly checkout the dev branch
+
+    - name: Set up git
+      run: |
+        git config user.email "89786258+00krp@users.noreply.github.com"
+        git config user.name "00krp"
+
+    - name: Checkout staging branch
+      uses: actions/checkout@v4
+      with:
+        ref: staging  # Now checkout the staging branch
+
+    - name: Merge dev into staging
+      run: git merge dev --allow-unrelated-histories -m "Merge from dev to staging"
+
+    - name: Push code to staging
+      run: git push
